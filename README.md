@@ -141,28 +141,81 @@ CRUD:
 
 All dashboard and module routes are protected by `requireAuth`.
 
-## Deployment
+## Free Deployment
 
-Frontend on Vercel:
+Vercel can host both the Next.js frontend and the Express backend for free on `*.vercel.app` domains. The backend runs as Vercel serverless functions, and PostgreSQL still needs to be hosted separately.
 
-- Root directory: `frontend`
-- Build command: `npm run build`
-- Environment: `NEXT_PUBLIC_API_URL=https://api.business-finance-dashboard.com`
+### Frontend on Vercel
 
-Backend on Render/Railway:
+1. Push this repository to GitHub.
+2. In Vercel, create a new project from the GitHub repo.
+3. Set the project root directory to `frontend`.
+4. Use these build settings:
 
-- Root directory: `backend`
-- Build command: `npm install && npm run build && npm run prisma:deploy`
-- Start command: `npm run start`
-- Environment:
-  - `DATABASE_URL`
-  - `JWT_SECRET`
-  - `FRONTEND_URL=https://business-finance-dashboard.com`
-  - `COOKIE_DOMAIN=.business-finance-dashboard.com`
-  - `NODE_ENV=production`
+```txt
+Framework Preset: Next.js
+Install Command: npm install
+Build Command: npm run build
+Output Directory: .next
+```
 
-Database:
+5. Add this environment variable after the backend is deployed:
 
-- Use PostgreSQL from Supabase, Neon, Railway, or Render.
-- Run `npm run prisma:deploy` inside `backend` during deployment.
-- Run `npm run prisma:seed` inside `backend` once to create the demo admin.
+```txt
+NEXT_PUBLIC_API_URL=https://your-backend-domain.example.com
+```
+
+Vercel will give the frontend a free domain like:
+
+```txt
+https://business-finance-dashboard.vercel.app
+```
+
+You can add a custom domain in Vercel later, but buying/registering a custom domain is not free. The free domain is the Vercel subdomain.
+
+### Backend on Vercel
+
+Create a second Vercel project from the same GitHub repo for the backend.
+
+Backend settings:
+
+```txt
+Root Directory: backend
+Framework Preset: Other
+Install Command: npm install
+Build Command: npm run vercel-build
+Output Directory: leave empty
+```
+
+Backend environment variables:
+
+```txt
+DATABASE_URL=postgresql://...
+JWT_SECRET=use-a-long-random-secret-at-least-16-characters
+FRONTEND_URL=https://your-vercel-app.vercel.app
+COOKIE_DOMAIN=
+NODE_ENV=production
+```
+
+Leave `COOKIE_DOMAIN` empty when using different free Vercel subdomains for the frontend and backend.
+
+The backend will get a free URL like:
+
+```txt
+https://business-finance-dashboard-backend.vercel.app
+```
+
+Use that URL in the frontend Vercel project:
+
+```txt
+NEXT_PUBLIC_API_URL=https://business-finance-dashboard-backend.vercel.app
+```
+
+### Database
+
+PostgreSQL is still separate from Vercel:
+
+- Use PostgreSQL from Supabase, Neon, Railway, Render, or another hosted Postgres provider.
+- The backend Vercel build runs `prisma migrate deploy` automatically.
+- Run `npm run prisma:seed` once against the production database to create the demo admin.
+- Keep `DEMO_ADMIN_EMAIL` and `DEMO_ADMIN_PASSWORD` in backend environment variables if you want a different first admin account.
