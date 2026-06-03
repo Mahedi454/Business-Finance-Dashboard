@@ -1,0 +1,185 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ProjectStatus {
+  Pending
+  InProgress
+  Completed
+}
+
+enum PaymentType {
+  AdvancePayment
+  MidPayment
+  FinalPayment
+}
+
+enum PaymentMethod {
+  Cash
+  Bank
+  bKash
+  Nagad
+}
+
+enum ExpenseCategory {
+  Hosting
+  Domain
+  Marketing
+  SoftwareTools
+  Salary
+  Equipment
+  Miscellaneous
+}
+
+enum EmployeeStatus {
+  Active
+  Inactive
+}
+
+enum SalaryPaymentStatus {
+  Paid
+  Unpaid
+}
+
+model AdminUser {
+  id           Int      @id @default(autoincrement())
+  name         String
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Client {
+  id          Int       @id @default(autoincrement())
+  clientName  String
+  companyName String?
+  phone       String?
+  email       String?
+  address     String?
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  projects    Project[]
+}
+
+model Project {
+  id              Int              @id @default(autoincrement())
+  clientId        Int
+  projectName     String
+  dealAmount      Decimal          @db.Decimal(12, 2)
+  startDate       DateTime?
+  deliveryDate    DateTime?
+  status          ProjectStatus    @default(Pending)
+  notes           String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  client          Client           @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  projectPayments ProjectPayment[]
+
+  @@index([clientId])
+  @@index([status])
+}
+
+model ProjectPayment {
+  id              Int           @id @default(autoincrement())
+  projectId       Int
+  paymentType     PaymentType
+  amount          Decimal       @db.Decimal(12, 2)
+  paymentDate     DateTime
+  paymentMethod   PaymentMethod
+  transactionNote String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  project         Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([paymentDate])
+}
+
+model Investment {
+  id             Int           @id @default(autoincrement())
+  investorName   String
+  amount         Decimal       @db.Decimal(12, 2)
+  investmentDate DateTime
+  paymentMethod  PaymentMethod
+  note           String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([investmentDate])
+}
+
+model Expense {
+  id           Int             @id @default(autoincrement())
+  expenseTitle String
+  category     ExpenseCategory
+  amount       Decimal         @db.Decimal(12, 2)
+  expenseDate  DateTime
+  paidBy       String?
+  receiptUrl   String?
+  note         String?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  @@index([expenseDate])
+}
+
+model Employee {
+  id           Int            @id @default(autoincrement())
+  employeeName String
+  role         String
+  phone        String?
+  email        String?
+  joiningDate  DateTime?
+  salary       Decimal        @db.Decimal(12, 2)
+  status       EmployeeStatus @default(Active)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  salaries     Salary[]
+}
+
+model Salary {
+  id            Int                 @id @default(autoincrement())
+  employeeId    Int
+  month         String
+  salaryAmount  Decimal             @db.Decimal(12, 2)
+  bonus         Decimal             @default(0) @db.Decimal(12, 2)
+  deduction     Decimal             @default(0) @db.Decimal(12, 2)
+  totalPaid     Decimal             @db.Decimal(12, 2)
+  paymentDate   DateTime?
+  paymentStatus SalaryPaymentStatus @default(Unpaid)
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  employee      Employee            @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([employeeId])
+  @@index([month])
+  @@index([paymentDate])
+}
+
+model Withdrawal {
+  id            Int           @id @default(autoincrement())
+  withdrawBy    String
+  amount        Decimal       @db.Decimal(12, 2)
+  withdrawDate  DateTime
+  paymentMethod PaymentMethod
+  note          String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([withdrawDate])
+}
+
+model ActivityLog {
+  id           Int      @id @default(autoincrement())
+  activityType String
+  title        String
+  amount       Decimal  @default(0) @db.Decimal(12, 2)
+  createdAt    DateTime @default(now())
+}
