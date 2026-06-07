@@ -2,7 +2,8 @@ import compression from "compression";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import express from "express";
-import rateLimit from "express-rate-limit";
+import type { RequestHandler } from "express";
+import { rateLimit } from "express-rate-limit";
 import helmet from "helmet";
 import morgan from "morgan";
 import { env } from "./config/env.js";
@@ -14,9 +15,10 @@ import { modulesRouter } from "./routes/modules.js";
 import { reportsRouter } from "./routes/reports.js";
 
 export const app = express();
+const helmetMiddleware = helmet as unknown as () => RequestHandler;
 
 app.set("trust proxy", 1);
-app.use(helmet());
+app.use(helmetMiddleware());
 app.use(compression());
 app.use(morgan("dev"));
 app.use(express.json({ limit: "1mb" }));
